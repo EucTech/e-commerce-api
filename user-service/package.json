@@ -11,12 +11,11 @@
   "license": "ISC",
   "devDependencies": {
     "serverless-offline": "^14.3.4",
-    "serverless-plugin-typescript": "^2.1.5",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.7.2"
+    "ts-node": "^10.9.2"
   },
   "dependencies": {
     "@types/aws-lambda": "^8.10.145",
-    "aws-lambda": "^1.0.7"
+    "aws-lambda": "^1.0.7",
+    "serverless-plugin-typescript": "^2.1.5"
   }
 }
