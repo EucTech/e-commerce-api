@@ -1,12 +1,41 @@
 import { APIGatewayProxyEventV2 } from "aws-lambda";
 import { SuccessResponse, ErrorResponse } from "app/utility/response";
+import { UserRepository } from "../repository/userRepository";
+import { autoInjectable, container, inject } from "tsyringe";
+import { plainToClass } from "class-transformer";
+import { SignupInput } from "app/models/dto/SignupInput";
+import { AppValidation } from "app/utility/errors";
+import { GetSalt, GetHashedPassword } from "../utility/password";
 
+container.register("UserRepository", { useClass: UserRepository });
+
+@autoInjectable()
 export class UserService {
-  constructor() {}
+  constructor(@inject("UserRepository") private repository: UserRepository) {}
 
   // User Creation, Validation & Login
   async CreateUser(event: APIGatewayProxyEventV2) {
-    return SuccessResponse({ message: "response from create User" });
+    try {
+      const input = plainToClass(SignupInput, event.body);
+      const error = await AppValidation(input);
+      if (error) return ErrorResponse(404, error);
+
+      const salt = await GetSalt();
+      const hashedPassword = await GetHashedPassword(input.password, salt);
+
+      const data = await this.repository.createAccount({
+        email: input.email,
+        password: hashedPassword,
+        phone: input.phone,
+        userType: "BUYER",
+        salt: salt,
+      });
+
+      return SuccessResponse(data);
+    } catch (error) {
+      console.log(error);
+      return ErrorResponse(500, error);
+    }
   }
 
   async UserLogin(event: APIGatewayProxyEventV2) {
